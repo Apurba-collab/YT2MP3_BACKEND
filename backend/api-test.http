@@ -1,0 +1,32 @@
+@base = http://localhost:8000
+
+### 1. Register
+POST {{base}}/api/auth/register/
+Content-Type: application/json
+
+{"username": "test", "password": "Str0ng-pass-123"}
+
+### 2. Login
+# @name login
+POST {{base}}/api/auth/login/
+Content-Type: application/json
+
+{"username": "test", "password": "Str0ng-pass-123"}
+
+### 3. Create audio job
+# @name job
+POST {{base}}/api/jobs/
+Authorization: Bearer {{login.response.body.access}}
+Content-Type: application/json
+
+{"url": "https://youtube.com/shorts/f2oTc0CLNaA?si=_0ClPDZD0JgiQ5EC"}
+
+### 4. Check job status (open download_url in a browser when done)
+GET {{base}}/api/jobs/{{job.response.body.id}}/
+Authorization: Bearer {{login.response.body.access}}
+
+### 5. Refresh token
+POST {{base}}/api/auth/refresh/
+Content-Type: application/json
+
+{"refresh": "{{login.response.body.refresh}}"}

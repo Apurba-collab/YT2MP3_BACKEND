@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "YT Audio",
+    "slug": "ytaudio",
+    "scheme": "ytaudio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-sharing",
+      "expo-status-bar"
+    ],
+    "android": {
+      "package": "com.yourcompany.ytaudio"
+    },
+    "ios": {
+      "bundleIdentifier": "com.yourcompany.ytaudio"
+    }
+  }
+}

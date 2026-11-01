@@ -1,0 +1,19 @@
+x-app: &app
+  build: ./backend
+  env_file: .env
+  volumes: [media:/data/media]
+  depends_on: [db, redis]
+services:
+  web:
+    <<: *app
+    ports: ["8000:8000"]   # put Nginx/Caddy with HTTPS in front
+  worker:
+    <<: *app
+    command: celery -A config worker -l info -c 2
+  db:
+    image: postgres:16
+    env_file: .env
+    volumes: [pg:/var/lib/postgresql/data]
+  redis:
+    image: redis:7
+volumes: { media: {}, pg: {} }
