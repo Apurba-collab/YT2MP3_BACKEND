@@ -7,8 +7,8 @@ from django.conf import settings
 from django.utils import timezone
 import yt_dlp
 from .models import Job
-log = logging.getLogger(__name__)
 
+log = logging.getLogger(__name__)
 
 COOKIES_SRC = "/etc/secrets/cookies.txt"   # Render secret file
 COOKIES_TMP = "/tmp/cookies.txt"           # yt-dlp needs a writable copy
@@ -55,7 +55,10 @@ def fetch_audio(job_id):
         job.title = (info.get("title") or "audio")[:200]
         job.thumbnail = info.get("thumbnail") or ""
         job.filename, job.status = name, Job.Status.DONE
-    
+    except Exception as e:
+        log.exception("yt-dlp failed for job %s", job.id)  # full details stay in server logs
+        job.status, job.error = Job.Status.FAILED, friendly_error(e)
+    job.save()
 
 @shared_task
 def cleanup_old_files(hours=24):
