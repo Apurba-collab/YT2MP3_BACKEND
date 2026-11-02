@@ -10,12 +10,24 @@ from .serializers import JobSerializer, RegisterSerializer
 from .tasks import fetch_audio
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from django.db import connection
 
 def debug_admin_user(request):
     User = get_user_model()
+
     user = User.objects.filter(username="Apurba").first()
 
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT current_database(), current_user, current_schema()"
+        )
+        db_info = cursor.fetchone()
+
     return JsonResponse({
+        "database": connection.vendor,
+        "db_name": db_info[0],
+        "db_user": db_info[1],
+        "db_schema": db_info[2],
         "user_exists": user is not None,
         "is_staff": user.is_staff if user else None,
         "is_superuser": user.is_superuser if user else None,
