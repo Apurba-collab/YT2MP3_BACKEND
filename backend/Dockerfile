@@ -6,4 +6,4 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN SECRET_KEY=x python manage.py collectstatic --noinput
-CMD ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi -b 0.0.0.0:8000 -w 3 --timeout 60"]
+CMD ["sh", "-c", "python manage.py migrate && gunicorn config.wsgi -b 0.0.0.0:${PORT:-8000} -w 1 --threads 2 --timeout 180"]
