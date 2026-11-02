@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 from datetime import timedelta
@@ -6,9 +7,25 @@ from django.conf import settings
 from django.utils import timezone
 import yt_dlp
 from .models import Job
+log = logging.getLogger(__name__)
+
 
 COOKIES_SRC = "/etc/secrets/cookies.txt"   # Render secret file
 COOKIES_TMP = "/tmp/cookies.txt"           # yt-dlp needs a writable copy
+
+def friendly_error(e):
+    m = str(e).lower()
+    if "not a bot" in m or "sign in" in m or "cookies" in m:
+        return "The service is busy right now. Please try again later."
+    if "too long" in m or "duration" in m:
+        return "This video is too long."
+    if "private" in m:
+        return "This video is private."
+    if "age" in m and "restrict" in m:
+        return "This video is age-restricted and can't be processed."
+    if "unavailable" in m or "removed" in m or "not available" in m:
+        return "This video is unavailable."
+    return "Couldn't process this video. Try another link."
 
 @shared_task(soft_time_limit=600)
 def fetch_audio(job_id):
@@ -38,9 +55,7 @@ def fetch_audio(job_id):
         job.title = (info.get("title") or "audio")[:200]
         job.thumbnail = info.get("thumbnail") or ""
         job.filename, job.status = name, Job.Status.DONE
-    except Exception as e:
-        job.status, job.error = Job.Status.FAILED, str(e)[:300]
-    job.save()
+    
 
 @shared_task
 def cleanup_old_files(hours=24):
