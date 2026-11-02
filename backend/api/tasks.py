@@ -1,9 +1,14 @@
+import os
+import shutil
 from datetime import timedelta
 from celery import shared_task
 from django.conf import settings
 from django.utils import timezone
 import yt_dlp
 from .models import Job
+
+COOKIES_SRC = "/etc/secrets/cookies.txt"   # Render secret file
+COOKIES_TMP = "/tmp/cookies.txt"           # yt-dlp needs a writable copy
 
 @shared_task(soft_time_limit=600)
 def fetch_audio(job_id):
@@ -16,6 +21,14 @@ def fetch_audio(job_id):
         "match_filter": yt_dlp.utils.match_filter_func(f"duration < {settings.MAX_DURATION_SECONDS}"),
         "postprocessors": [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "192"}],
     }
+    has_cookies = os.path.exists(COOKIES_SRC)
+    if has_cookies:
+        shutil.copy(COOKIES_SRC, COOKIES_TMP)
+        opts["cookiefile"] = COOKIES_TMP
+    if os.environ.get("YT_PROXY"):
+        opts["proxy"] = os.environ["YT_PROXY"]
+    print("YTDLP cookies:", has_cookies, "| deno:", shutil.which("deno"),
+          "| yt-dlp:", yt_dlp.version.__version__, flush=True)
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(job.url, download=True)
