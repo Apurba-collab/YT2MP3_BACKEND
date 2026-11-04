@@ -10,7 +10,7 @@ from .serializers import JobSerializer, RegisterSerializer
 from .tasks import fetch_audio
 # from django.http import JsonResponse
 # from django.contrib.auth import get_user_model
-# from django.db import connection
+from django.db import connection
 
 # def debug_admin_user(request):
 #     User = get_user_model()
@@ -45,6 +45,8 @@ def debug_admin_user(request):
         "is_staff": user.is_staff if user else None,
         "is_superuser": user.is_superuser if user else None,
         "is_active": user.is_active if user else None,
+        "db_engine": connection.settings_dict["ENGINE"],
+        "db_name": str(connection.settings_dict["NAME"])
     })
 
 class Register(generics.CreateAPIView):
