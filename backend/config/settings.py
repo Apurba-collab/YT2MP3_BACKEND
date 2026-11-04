@@ -61,7 +61,7 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.AnonRateThrottle",
                                  "rest_framework.throttling.UserRateThrottle",
                                  "rest_framework.throttling.ScopedRateThrottle"],
-    "DEFAULT_THROTTLE_RATES": {"anon": "30/min", "user": "120/min", "jobs": "15/hour", "auth": "10/min"},
+    "DEFAULT_THROTTLE_RATES": {"anon": "30/min", "user": "120/min", "jobs": os.environ.get("JOBS_RATE", "15/hour"), "auth": "10/min"},
 }
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
