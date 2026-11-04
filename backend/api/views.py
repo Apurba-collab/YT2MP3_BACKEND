@@ -1,5 +1,17 @@
+# from django.conf import settings
+# from django.core import signing
+# from django.http import FileResponse, Http404
+# from rest_framework import generics
+# from rest_framework.permissions import AllowAny
+# from rest_framework.views import APIView
+# from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+# from .models import Job
+# from .serializers import JobSerializer, RegisterSerializer
+# from .tasks import fetch_audio
+import threading
 from django.conf import settings
 from django.core import signing
+from django.db import connections
 from django.http import FileResponse, Http404
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
@@ -8,6 +20,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .models import Job
 from .serializers import JobSerializer, RegisterSerializer
 from .tasks import fetch_audio
+
+def _run(job_id):
+    try:
+        fetch_audio(job_id)
+    finally:
+        connections.close_all()
+
+
 
 class Register(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -25,7 +45,13 @@ class JobCreate(generics.CreateAPIView):
     throttle_scope = "jobs"
     def perform_create(self, s):
         job = s.save(user=self.request.user)
-        fetch_audio.delay(str(job.id))
+        threading.Thread(target=_run, args=(str(job.id),), daemon=True).start()
+# class JobCreate(generics.CreateAPIView):
+#     serializer_class = JobSerializer
+#     throttle_scope = "jobs"
+#     def perform_create(self, s):
+#         job = s.save(user=self.request.user)
+#         fetch_audio.delay(str(job.id))
 
 class JobDetail(generics.RetrieveAPIView):
     serializer_class = JobSerializer
